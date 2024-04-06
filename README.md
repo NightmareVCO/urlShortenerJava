@@ -11,5 +11,5 @@ En resumen, el proyecto busca aplicar conocimientos fundamentales de desarrollo 
 * Nombre: **Natasha López Concepción**
 * Código: **10141274**
 * Correo: **nmlc0001@ce.pucmm.edu.do**
-* Repositorio: **[practicas-icc-352](https://github.com/NightmareVCO/urlShortenerJava-5)**
+* Repositorio: **[UrlShortener](https://github.com/NightmareVCO/urlShortenerJava)**
 * Universidad: **Pontificia Universidad Catolica Madre y Maestra (PUCMM)**
