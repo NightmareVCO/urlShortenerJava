@@ -3,6 +3,13 @@ package org.example;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.plugin.bundled.CorsPluginConfig;
+import org.jasypt.util.text.BasicTextEncryptor;
+import services.AuthService;
+import services.StatisticService;
+import services.UrlService;
+import services.UserService;
+
+import java.util.Date;
 
 public class Main {
     public static void main(String[] args) {
@@ -16,5 +23,17 @@ public class Main {
             });
             config.plugins.enableCors(corsContainer -> corsContainer.add(CorsPluginConfig::anyHost));
         }).start(3000);
+
+        BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+
+        UserService userService = new UserService();
+        AuthService authService = new AuthService(textEncryptor);
+        UrlService urlService = new UrlService();
+        StatisticService statisticService = new StatisticService();
+
+//        Comentado porque ya están creados.
+//        userService.create("johndoe", "johndoe@example.com", "John Doe", "gone", true, true);
+//        urlService.create("https://www.example.com", "johndoe", new Date(), userService.findByUsername("johndoe"));
+//        statisticService.create("Safari", "Mac OS", "127.0.0.1");
     }
 }

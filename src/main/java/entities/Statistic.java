@@ -1,24 +1,31 @@
 package entities;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import org.bson.types.ObjectId;
+
+@Entity("statistics")
 public class Statistic {
-  private int clicks;
+  @Id
+  ObjectId id;
   private String browser;
   private String operatingSystem;
   private String ipDirection;
 
-  public Statistic(int clicks, String browser, String operatingSystem, String ipDirection) {
-    this.clicks = clicks;
+  public Statistic() {
+  }
+
+  public Statistic(ObjectId id, String browser, String operatingSystem, String ipDirection) {
+    this.id = id;
     this.browser = browser;
     this.operatingSystem = operatingSystem;
     this.ipDirection = ipDirection;
   }
 
-  public int getClicks() {
-    return clicks;
-  }
-
-  public void setClicks(int clicks) {
-    this.clicks = clicks;
+  public Statistic(String browser, String operatingSystem, String ipDirection) {
+    this.browser = browser;
+    this.operatingSystem = operatingSystem;
+    this.ipDirection = ipDirection;
   }
 
   public String getBrowser() {

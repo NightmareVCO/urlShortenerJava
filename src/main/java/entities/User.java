@@ -1,7 +1,13 @@
 package entities;
 
-public class User {
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import org.bson.types.ObjectId;
 
+@Entity("users")
+public class User {
+  @Id
+  ObjectId id;
   private String username;
   private String email;
   private String name;
@@ -9,7 +15,29 @@ public class User {
   private boolean admin;
   private boolean active;
 
+  public User() {
+  }
+
   public User(String username, String email, String name, String password, boolean admin, boolean active) {
+    this.username = username;
+    this.email = email;
+    this.name = name;
+    this.password = password;
+    this.admin = admin;
+    this.active = active;
+  }
+
+  public User(String username, String email, String name, String password, boolean admin) {
+    this.username = username;
+    this.email = email;
+    this.name = name;
+    this.password = password;
+    this.admin = admin;
+    this.active = true;
+  }
+
+  public User(ObjectId id, String username, String email, String name, String password, boolean admin, boolean active) {
+    this.id = id;
     this.username = username;
     this.email = email;
     this.name = name;
