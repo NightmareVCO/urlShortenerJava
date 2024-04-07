@@ -1,15 +1,20 @@
 package controllers;
 
 import Util.BaseController;
+import entities.User;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import services.UserService;
+import java.util.List;
+import java.util.Map;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class UserController extends BaseController {
 
-  private final UserService userService;
+ private final UserService userService;
+
+ private final String USER_PATH = "/users"; //cambiar a la ruta de los usuarios
 
   public UserController(Javalin app, UserService userService) {
     super(app);
@@ -17,33 +22,79 @@ public class UserController extends BaseController {
   }
 
   public void list(Context ctx) {
-  // TODO: Listar todos los usuarios
+    List<User> users = userService.findAll();
+    Map<String, Object> model = setModel("users", users);
+
+    ctx.render(USER_PATH, model);
   }
 
-  private void show(Context context) {
-  // TODO?: Mostrar un usuario
+  private void show(Context ctx) {
+    String username = ctx.pathParam("username");
+    User user = userService.findByUsername(username);
+
+    if (user == null) {
+      ctx.result("User not found");
+      return;
+    }
+
+    Map<String, Object> model = setModel("user", user);
+    ctx.render("/public/templates/html", model);
   }
 
-  private void create(Context context) {
-  // TODO: Crear un usuario
+  private void create(Context ctx) {
+    String email = ctx.formParam("email");
+    User user = userService.findByEmail(email);
+
+    if (user != null) {
+      ctx.result("User already exists");
+      return;
+    }
+
+    String name = ctx.formParam("name");
+    assert email != null; String username = email.split("@")[0];
+    String password = ctx.formParam("password");
+    boolean admin = ctx.formParam("admin") != null;
+
+    userService.create(username, email, name, password, admin, true);
+    ctx.redirect(USER_PATH);
   }
 
-  private void update(Context context) {
-  // TODO: Actualizar un usuario. Redirigir a la página de usuario?
+
+  private void update(Context ctx) {
+    String email = ctx.formParam("email");
+    assert email != null; String username = email.split("@")[0];
+    String name = ctx.formParam("name");
+    String password = ctx.formParam("password");
+    boolean admin = ctx.formParam("admin") != null;
+    boolean active = ctx.formParam("active") != null;
+
+    userService.update(username, email, name, password, admin, active);
+    ctx.redirect(USER_PATH);
   }
 
-  private void delete(Context context) {
-  // TODO: Eliminar un usuario
+  private void remove(Context ctx) {
+    String username = ctx.pathParam("username");
+    User loggedUser = ctx.sessionAttribute("user");
+
+    assert loggedUser != null;
+    if(loggedUser.getUsername().equals(username)) {
+      ctx.result("You can't delete yourself");
+      return;
+    }
+
+    userService.desactivate(username);
+    ctx.redirect(USER_PATH);
   }
 
-  @Override
-  public void applyRoutes() {
-    app.routes(() -> path("/users", () -> {
-      get("/", this::list);
-      get("/{username}", this::show);
-      post("/", this::create);
-      post("/{username}", this::update);
-      post("/{username}/delete", this::delete);
-    }));
-  }
+    @Override
+    public void applyRoutes() {
+        app.routes(() -> path("/users", () -> {
+            get(this::list);
+            post(this::create);
+            get("/{username}", this::show);
+            post("/{username}", this::update);
+            delete("/{username}", this::remove);
+        }));
+    }
 }
+

@@ -17,10 +17,30 @@ public class UserService extends DbManagement<User> {
     createDb(newUser);
   }
 
+    public void update(String username, String email, String name, String password, boolean isAdmin, boolean isActive) {
+        User user = this.findByUsername(username);
+        user.setEmail(email);
+        user.setName(name);
+        user.setPassword(password);
+        user.setAdmin(isAdmin);
+        user.setActive(isActive);
+        updateDb(user);
+    }
+
   public void update(User user) {
     updateDb(user);
   }
 
+  public void desactivate(String username) {
+    User user = this.find(username);
+    user.setActive(false);
+    this.updateDb(user);
+  }
+
+  public boolean checkPassword(String email, String password) {
+    User user = this.findByEmail(email);
+    return user != null && user.getPassword().equals(password);
+  }
   public void delete(String id) {
     deleteDbById(id);
   }
@@ -35,5 +55,9 @@ public class UserService extends DbManagement<User> {
 
   public User findByUsername(String username) {
     return findDb().filter(Filters.eq("username", username)).first();
+  }
+
+  public User findByEmail(String email) {
+    return findDb().filter(Filters.eq("email", email)).first();
   }
 }
