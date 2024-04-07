@@ -160,7 +160,7 @@
     <ul class="flex items-start gap-x-4">
       <li class="flex items-center justify-center w-28">
         <a class="text-white text-center border border-solid hover:scale-110 active:bg-btn-gray-border transition border-btn-gray-border bg-btn-gray rounded-full w-44 py-3 shadow-[rgba(0,_0,_0,_0.25)_0px_25px_50px_-12px]"
-           href="/login.html">
+           href="/auth/login">
           Login
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="inline w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -170,7 +170,7 @@
       </li>
       <li class="flex items-center justify-center hidden w-40 lg:flex">
         <a class="text-center text-white border border-solid hover:scale-110 transition border-btn-blue bg-btn-blue rounded-full w-44 py-3 shadow-[-10px_-10px_30px_4px_rgba(0,0,0,0.1),_10px_10px_30px_4px_rgba(45,78,255,0.20)]"
-           href="/singup.html">
+           href="/auth/signup">
           Register Now
         </a>
       </li>
@@ -183,7 +183,7 @@
     </div>
     <div class="fixed top-0 left-0 z-30 w-full p-4">
       <p class="text-center text-white font-extralight">
-        <a class="text-blue-500 underline" href="/singup.html">Register Now</a>
+        <a class="text-blue-500 underline" href="/auth/signup">Register Now</a>
         to enjoy Unlimited History
       </p>
     </div>
@@ -220,7 +220,9 @@
           <path stroke-linecap="round" stroke-linejoin="round"
                 d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
         </svg>
-        <input class="ml-2 text-white bg-btn-gray caret-btn-pink focus:outline-none w-80" type="text" placeholder="Enter the link here" />
+        <label>
+          <input class="ml-2 text-white bg-btn-gray caret-btn-pink focus:outline-none w-80" type="text" placeholder="Enter the link here" />
+        </label>
       </div>
       <button
               class="border border-solid text-white hover:scale-95 transition border-btn-blue bg-btn-blue w-full py-3 rounded-full shadow-[-10px_-10px_30px_4px_rgba(0,0,0,0.1),_10px_10px_30px_4px_rgba(45,78,255,0.20)]"
@@ -374,8 +376,6 @@
         </td>
         <td class="px-4 py-2 text-center border-btn-gray-border">2021-10-10</td>
       </tr>
-
-
       </tbody>
     </table>
   </section>

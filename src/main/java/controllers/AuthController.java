@@ -7,112 +7,116 @@ import io.javalin.http.Context;
 import services.AuthService;
 import services.UserService;
 
-
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class AuthController extends BaseController {
   private final UserService userService;
   private final AuthService authService;
 
-  public AuthController(Javalin App, UserService userService, AuthService authService) {
+  // Literal paths to the templates
+  private final String INDEX_PATH = "/";
+  private final String LOGIN_PATH = "/auth/login";
+  private final String SIGNUP_PATH = "/auth/signup";
+  private final String LOGIN_RENDER = "public/templates/login.html";
+  private final String LOGGED_RENDER = "public/templates/logged.html";
+  private final String SIGNUP_RENDER = "public/templates/signup.html";
+
+
+  public AuthController(Javalin app, UserService userService, AuthService authService) {
     super(app);
     this.userService = userService;
     this.authService = authService;
   }
 
   public void protect(Context ctx){
-    //Si el usuario está logueado, redirigir a la página principal
-    User usuario = ctx.sessionAttribute("user");
-    String path = ctx.path();
+    User user = ctx.sessionAttribute("user");
+    if(user == null)
+      return;
 
-    if(usuario != null && !path.equals("/auth/login") && !path.equals("/auth/signup")){
-      ctx.redirect("/public/templates/home.html");
-    }
+    ctx.redirect(INDEX_PATH);
   }
 
   public void loginGet(Context ctx){
-
-    ctx.render("/public/templates/login.html");
-
-
+    ctx.render(LOGIN_RENDER);
   }
 
   public void loginPost(Context ctx){
-    //Verificar las credenciales del usuario y redirigir a la página principal
-    String username = ctx.formParam("email");
+    String email = ctx.formParam("email");
     String password = ctx.formParam("password");
+    System.out.println("Email: " + email + " Password: " + password);
     boolean remember = ctx.formParam("remember") != null;
-    User user = userService.findByUsername(username);
 
+    User user = userService.findByEmail(email);
     if(user == null){
-      ctx.sessionAttribute("error","Usuario no encontrado");
-      ctx.redirect("/auth/login");
+      System.out.println("User not found");
+      ctx.redirect(LOGIN_PATH);
       return;
     }
-
     if(!user.isActive()){
-      ctx.sessionAttribute("inactive_user", "Usuario inactivo, favor contactar al administrador.");
-      ctx.redirect("/auth/login");
+      System.out.println("User is not active");
+      ctx.redirect(LOGIN_PATH);
       return;
     }
 
-    if(!userService.checkPassword(username, password) || user == null){
-      ctx.sessionAttribute("error","Password incorrecto");
-      ctx.redirect("/auth/login");
+    String userPassword = user.getPassword();
+    String decryptedPassword = authService.decryptText(userPassword);
+    assert password != null;
+    if(!password.equals(decryptedPassword)){
+      System.out.println("Password is incorrect");
+      ctx.redirect(LOGIN_PATH);
       return;
     }
 
     ctx.sessionAttribute("user", user);
-    ctx.sessionAttribute("username", user.getUsername());
+    ctx.sessionAttribute("email", user.getEmail());
     if(remember){
-      String usuarioEncryptado = authService.encryptText(username);
-      ctx.cookie("user", usuarioEncryptado, 604800);
+      String encryptUser = authService.encryptText(email);
+      ctx.cookie("user", encryptUser, 604800);
     }
-    ctx.redirect("/");
+    ctx.redirect(INDEX_PATH);
   }
 
   public void signupGet(Context ctx){
-  //Renderizar la página de registro
-    ctx.render("/public/templates/signup.html");
-
+    ctx.render(SIGNUP_RENDER);
   }
 
   public void signupPost(Context ctx){
-    String username = ctx.formParam("username");
-    if(userService.findByUsername(username) != null){
-      System.out.println(userService.findByUsername(username));
-      ctx.status(400);
-      ctx.result("El usuario ya existe");
+    String email = ctx.formParam("email");
+    User user = userService.findByEmail(email);
+
+    if(user!= null){
+      ctx.redirect(SIGNUP_PATH);
       return;
     }
 
-    String email = ctx.formParam("email");
     String name = ctx.formParam("name");
+    assert email != null; String username = email.split("@")[0];
     String password = ctx.formParam("password");
+    String encryptedPassword = authService.encryptText(password);
     boolean admin = ctx.formParam("admin") != null;
     boolean active = ctx.formParam("active") != null;
 
-    userService.create(username,email, name, password, admin, active);
-    ctx.redirect("/");
+    userService.create(username, email, name, encryptedPassword, admin, active);
+    ctx.redirect(INDEX_PATH);
   }
 
   public void logout(Context ctx){
-  //Cerrar la sesión del usuario y redirigir a la página principal.
     ctx.req().getSession().invalidate();
     ctx.removeCookie("user");
-    ctx.redirect("/");
+    ctx.redirect(INDEX_PATH);
 
   }
 
   @Override
   public void applyRoutes() {
-    app.routes(() -> {
-      before("/auth/*", this::protect);
-      get("/auth/login", this::loginGet);
-      post("/auth/login", this::loginPost);
-      get("/auth/singup", this::signupGet) ;
-      post("/auth/singup", this::signupPost);
-      get("/auth/logout", this::logout);
-    });
+    app.routes(() -> path("/auth", () ->{
+      before("/login", this::protect);
+      before("/signup", this::protect);
+      get("/login", this::loginGet);
+      post("/login", this::loginPost);
+      get("/signup", this::signupGet) ;
+      post("/signup", this::signupPost);
+      get("/logout", this::logout);
+    }));
   }
 }

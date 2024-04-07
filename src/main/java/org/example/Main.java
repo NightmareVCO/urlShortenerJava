@@ -40,5 +40,7 @@ public class Main {
 //        userService.create("johndoe", "johndoe@example.com", "John Doe", "gone", true, true);
 //        urlService.create("https://www.example.com", "johndoe", new Date(), userService.findByUsername("johndoe"));
 //        statisticService.create("Safari", "Mac OS", "127.0.0.1");
+
+        app.get("/", ctx -> ctx.render("/public/templates/index.html"));
     }
 }

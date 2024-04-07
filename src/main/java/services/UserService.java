@@ -37,8 +37,8 @@ public class UserService extends DbManagement<User> {
     this.updateDb(user);
   }
 
-  public boolean checkPassword(String username, String password) {
-    User user = this.findByUsername(username);
+  public boolean checkPassword(String email, String password) {
+    User user = this.findByEmail(email);
     return user != null && user.getPassword().equals(password);
   }
   public void delete(String id) {
@@ -55,5 +55,9 @@ public class UserService extends DbManagement<User> {
 
   public User findByUsername(String username) {
     return findDb().filter(Filters.eq("username", username)).first();
+  }
+
+  public User findByEmail(String email) {
+    return findDb().filter(Filters.eq("email", email)).first();
   }
 }

@@ -5,17 +5,16 @@ import entities.User;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import services.UserService;
-
 import java.util.List;
 import java.util.Map;
 
-
 import static io.javalin.apibuilder.ApiBuilder.*;
-import static io.javalin.apibuilder.ApiBuilder.delete;
 
 public class UserController extends BaseController {
 
  private final UserService userService;
+
+ private final String USER_PATH = "/users"; //cambiar a la ruta de los usuarios
 
   public UserController(Javalin app, UserService userService) {
     super(app);
@@ -23,94 +22,79 @@ public class UserController extends BaseController {
   }
 
   public void list(Context ctx) {
-    String usuario_autoDelete = ctx.sessionAttribute("usuario_autoDelete");
-    ctx.sessionAttribute("usuario_autoDelete", null);
     List<User> users = userService.findAll();
+    Map<String, Object> model = setModel("users", users);
 
-    Map<String, Object> modelo =  setModelo(
-            "users", users,
-            "usuario_autoDelete", usuario_autoDelete);
-
-    ctx.render("/public/templates/html", modelo); //cambiar al archivo html que se va a renderizar
-
+    ctx.render(USER_PATH, model);
   }
 
-  private void show(Context context) {
-    String username = context.pathParam("username");
-    User user = userService.find(username);
+  private void show(Context ctx) {
+    String username = ctx.pathParam("username");
+    User user = userService.findByUsername(username);
 
     if (user == null) {
-      context.status(404);
-      context.result("Usuario no encontrado");
+      ctx.result("User not found");
       return;
     }
 
-    Map<String, Object> modelo = setModelo(
-            "user", user);
-
-    context.render("/public/templates/html", modelo); //cambiar al archivo html que se va a renderizar
-
+    Map<String, Object> model = setModel("user", user);
+    ctx.render("/public/templates/html", model);
   }
 
   private void create(Context ctx) {
-    String username = ctx.formParam("username");
-    if (userService.find(username) != null) {
-      ctx.status(400);
-      ctx.result("El usuario ya existe");
+    String email = ctx.formParam("email");
+    User user = userService.findByEmail(email);
+
+    if (user != null) {
+      ctx.result("User already exists");
       return;
     }
 
-    String email = ctx.formParam("email");
-    String name  = ctx.formParam("name");
+    String name = ctx.formParam("name");
+    assert email != null; String username = email.split("@")[0];
     String password = ctx.formParam("password");
     boolean admin = ctx.formParam("admin") != null;
-    boolean active = ctx.formParam("active") != null;
 
-    userService.create(username, email, name, password, admin, active);
-    ctx.redirect("/users/" + username);
+    userService.create(username, email, name, password, admin, true);
+    ctx.redirect(USER_PATH);
   }
 
 
   private void update(Context ctx) {
-  //Actualizar un usuario. Redirigir a la página de usuario
-
-    String username = ctx.pathParam("username");
     String email = ctx.formParam("email");
+    assert email != null; String username = email.split("@")[0];
     String name = ctx.formParam("name");
     String password = ctx.formParam("password");
     boolean admin = ctx.formParam("admin") != null;
     boolean active = ctx.formParam("active") != null;
 
     userService.update(username, email, name, password, admin, active);
-    ctx.redirect("/users/" + username);
+    ctx.redirect(USER_PATH);
   }
 
-  private void eliminar(Context ctx) {
+  private void remove(Context ctx) {
     String username = ctx.pathParam("username");
-    User usuarioLogueado = ctx.sessionAttribute("user");
+    User loggedUser = ctx.sessionAttribute("user");
 
-    assert usuarioLogueado != null;
-    if(usuarioLogueado.getUsername().equals(username)) {
-      ctx.sessionAttribute("usuario_autoDelete", "No puedes eliminarte a ti mismo.");
-      ctx.redirect("/users");
+    assert loggedUser != null;
+    if(loggedUser.getUsername().equals(username)) {
+      ctx.result("You can't delete yourself");
       return;
     }
 
     userService.desactivate(username);
-     ctx.redirect("/users");
+    ctx.redirect(USER_PATH);
   }
 
     @Override
     public void applyRoutes() {
-        app.routes(() -> {
-            path("/users", () -> {
-                get(this::list);
-                get("/{username}", this::show);
-                post(this::create);
-                put("/{username}", this::update);
-                delete("/{username}", this::eliminar);
-            });
-        });
+        app.routes(() -> path("/users", () -> {
+            get(this::list);
+            post(this::create);
+            get("/{username}", this::show);
+            post("/{username}", this::update);
+            delete("/{username}", this::remove);
+        }));
     }
 }
 
