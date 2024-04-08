@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="index.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+  <script src="../js/toggleSideMenu.js"></script>
+  <script src="../js/toggleAvatarMenu.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    tailwind.config = {
+      "animation": {
+        "text-gradient": "text-gradient 1.5s linear infinite"
+      },
+      "keyframes": {
+        "text-gradient": {
+          "to": {
+            "backgroundPosition": "200% center"
+          }
+        }
+      },
+      theme: {
+        extend: {
+          colors: {
+            'chinese-black': '#0B101B',
+            'btn-blue': '#144EE3',
+            'btn-gray': '#181E29',
+            'btn-gray-border': '#C9CED650',
+            'background-gray': '#181E2999',
+            'normal-background-gray': '#181E29',
+            'btn-pink': '#EB568E',
+            'table-gray': 'rgba(24, 30, 41, 0.3)',
+          },
+          borderWidth: {
+            '10': '10px',
+            '11': '11px',
+            '12': '12px',
+          }
+        }
+      }
+    }
+  </script>
+  <title>LinkLoom - Users</title>
+  <meta name="description" content="LinkLoom is an efficient and easy-to-use URL shortening service that streamlines your online experience.">
+</head>
+
+<body>
+<header class="flex items-center justify-center w-auto mt-10 mx-14">
+  <nav class="flex items-center justify-between w-full lg:justify-center gap-x-4">
+    <a href="/" class="lg:hidden">
+      <h2 class="mb-4 text-4xl font-extrabold text-center text-transparent lg:text-5xl bg-clip-text bg-gradient-to-r from-btn-blue via-btn-pink to-btn-blue">LinkLoom</h2>
+    </a>
+    <form method="post" action="/url"
+          class="flex justify-between items-center bg-btn-gray border-2 hidden lg:flex border-solid border-btn-gray-border min-w-fit w-[380px] sm:w-[700px] py-1 px-1 rounded-full shadow-[rgba(0,_0,_0,_0.25)_0px_25px_50px_-12px]">
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="white" class="inline ml-4 mr-1 size-6">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+        </svg>
+        <label>
+          <input required name="url" class="text-white bg-btn-gray caret-btn-pink focus:outline-none w-96" type="text" placeholder="Enter the link here" />
+        </label>
+        <label>
+          <input hidden value="dashboard" name="dashboard"/>
+        </label>
+      </div>
+      <button
+        class="border border-solid text-white hover:scale-95 transition border-btn-blue bg-btn-blue w-36 py-3 rounded-full shadow-[-10px_-10px_30px_4px_rgba(0,0,0,0.1),_10px_10px_30px_4px_rgba(45,78,255,0.20)]"
+        type="submit">Shorten
+        Now!</button>
+    </form>
+    <ul class="absolute right-[5%] flex items-start gap-x-4 min-w-fit">
+      <li class="hidden lg:block">
+        <img id="avatarButton" type="button" data-dropdown-toggle="userDropdown" data-dropdown-placement="bottom-start"
+             class="p-1 transition rounded-full cursor-pointer size-12 ring-2 ring-btn-gray-border hover:ring-btn-blue" th:src="@{'https://unavatar.io/' + ${session.user.username}}" alt="User dropdown">
+      </li>
+      <li>
+        <button data-drawer-target="sidebar" data-drawer-toggle="sidebar" aria-controls="sidebar" type="button"
+                class="inline-flex items-center p-2 mt-2 text-sm text-white transition rounded-lg ms-3 lg:hidden hover:bg-btn-blue">
+          <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path clip-rule="evenodd" fill-rule="evenodd"
+                  d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z">
+            </path>
+          </svg>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</header>
+<main>
+  <div class="hidden lg:block">
+    <span class="absolute box-base shadow-box box-animation-1 top-[5%] right-[20%]"></span>
+    <span class="absolute box-base shadow-box box-animation-2 bottom-[15%] right-[19%] "></span>
+    <span class="absolute box-base shadow-box box-animation-1 bottom-[9%] left-[14%]"></span>
+  </div>
+  <div class="hidden lg:block">
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="84" height="84" viewBox="0 0 84 84" fill="none">
+      <path
+        d="M41.9713 82.8507C64.5489 82.8507 82.8517 64.5479 82.8517 41.9703C82.8517 19.3926 64.5489 1.08984 41.9713 1.08984C19.3936 1.08984 1.09082 19.3926 1.09082 41.9703C1.09082 64.5479 19.3936 82.8507 41.9713 82.8507Z"
+        stroke="url(#paint0_linear_128_191)" stroke-linecap="round" />
+      <defs>
+        <linearGradient id="paint0_linear_128_191" x1="4089.13" y1="1.08984" x2="4089.13" y2="8177.18" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns=" http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160" fill="none">
+      <path opacity="0.95"
+            d="M56.0667 158.159C99.2489 171.361 144.957 147.058 158.16 103.875C171.362 60.6932 147.058 14.9846 103.876 1.78249C60.6936 -11.4196 14.9851 12.884 1.78294 56.0662C-11.4192 99.2485 12.8845 144.957 56.0667 158.159Z"
+            stroke="url(#paint0_linear_128_190)" stroke-linecap="round" stroke-dasharray="8 207" />
+      <defs>
+        <linearGradient id="paint0_linear_128_190" x1="7844.52" y1="2368.33" x2="3063.61" y2="18006" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="213" height="213" viewBox="0 0 213 213" fill="none">
+      <path opacity="0.91"
+            d="M38.3909 208.644C94.544 246.52 170.77 231.703 208.645 175.55C246.521 119.397 231.704 43.1717 175.551 5.29596C119.398 -32.5798 43.1726 -17.7631 5.29681 38.3901C-32.579 94.5432 -17.7622 170.769 38.3909 208.644Z"
+            stroke="url(#paint0_linear_128_189)" stroke-linecap="round" stroke-dasharray="25 311" />
+      <defs>
+        <linearGradient id="paint0_linear_128_189" x1="10241.3" y1="6794.73" x2="-3474.73" y2="27129.6" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="272" height="272" viewBox="0 0 272 272" fill="none">
+      <path opacity="0.86"
+            d="M8.89059 238.879C65.7249 309.063 168.694 319.886 238.878 263.051C309.063 206.217 319.885 103.248 263.051 33.0637C206.217 -37.1208 103.248 -47.9433 33.0633 8.89096C-37.1212 65.7253 -47.9437 168.694 8.89059 238.879Z"
+            stroke="url(#paint0_linear_128_188)" stroke-linecap="round" stroke-dasharray="50 415" />
+      <defs>
+        <linearGradient id="paint0_linear_128_188" x1="10450.9" y1="12614" x2="-14965.2" y2="33195.5" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="398" height="398" viewBox="0 0 398 398" fill="none">
+      <path opacity="0.82"
+            d="M8.14436 272.222C48.5999 377.612 166.831 430.252 272.221 389.797C377.612 349.341 430.252 231.11 389.796 125.719C349.341 20.3292 231.109 -32.3108 125.719 8.14475C20.3288 48.6003 -32.3112 166.832 8.14436 272.222Z"
+            stroke="url(#paint0_linear_128_187)" stroke-linecap="round" stroke-dasharray="84 518" />
+      <defs>
+        <linearGradient id="paint0_linear_128_187" x1="7641.66" y1="19017.5" x2="-30523.5" y2="33667.7" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="492" height="492" viewBox="0 0 492 492" fill="none">
+      <path opacity="0.77"
+            d="M1.28476 263.081C10.7344 398.217 127.944 500.106 263.08 490.656C398.216 481.206 500.105 363.997 490.655 228.861C481.205 93.725 363.996 -8.16379 228.86 1.28583C93.724 10.7354 -8.16485 127.945 1.28476 263.081Z"
+            stroke="url(#paint0_linear_128_186)" stroke-linecap="round" stroke-dasharray="126 622" />
+      <defs>
+        <linearGradient id="paint0_linear_128_186" x1="2184.55" y1="24452.7" x2="-46752.5" y2="27874.7" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="572" height="572" viewBox="0 0 572 572" fill="none">
+      <path opacity="0.73"
+            d="M7.14176 221.598C-28.4103 375.591 67.605 529.247 221.598 564.799C375.591 600.351 529.247 504.336 564.799 350.343C600.351 196.351 504.336 42.694 350.343 7.14197C196.35 -28.4101 42.6938 67.6052 7.14176 221.598Z"
+            stroke="url(#paint0_linear_128_185)" stroke-linecap="round" stroke-dasharray="176 726" />
+      <defs>
+        <linearGradient id="paint0_linear_128_185" x1="-5808.1" y1="27954.4" x2="-61573.8" y2="15079.8" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="616" height="616" viewBox="0 0 616 616" fill="none">
+      <path opacity="0.68"
+            d="M24.743 144.449C-65.5675 300.872 -11.9733 500.888 144.449 591.199C300.872 681.509 500.888 627.915 591.199 471.493C681.51 315.07 627.915 115.053 471.493 24.7429C315.07 -65.5677 115.054 -11.9734 24.743 144.449Z"
+            stroke="url(#paint0_linear_128_184)" stroke-linecap="round" stroke-dasharray="235 829" />
+      <defs>
+        <linearGradient id="paint0_linear_128_184" x1="-15597.5" y1="28511.1" x2="-72243" y2="-4193.29" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <svg class="svg-animation" xmlns="http://www.w3.org/2000/svg" width="626" height="626" viewBox="0 0 626 626" fill="none">
+      <path opacity="0.64"
+            d="M62.0468 43.8884C-86.5634 182.47 -94.6935 415.284 43.8878 563.894C182.469 712.505 415.284 720.635 563.894 582.053C712.504 443.472 720.634 210.658 582.053 62.0474C443.472 -86.5628 210.657 -94.6929 62.0468 43.8884Z"
+            stroke="url(#paint0_linear_128_183)" stroke-linecap="round" stroke-dasharray="302 933" />
+      <defs>
+        <linearGradient id="paint0_linear_128_183" x1="-26075.3" y1="25423.5" x2="-76260" y2="-28393" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#1F89DB" />
+          <stop offset="0.28125" stop-color="#F42A8B" />
+        </linearGradient>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- desktop table -->
+  <section class="hidden ml-28 m-12 lg:flex">
+    <table class="w-[70%] text-white table-auto">
+      <thead class="bg-btn-gray">
+      <tr>
+        <th class="py-3 font-normal text-center rounded-tl-lg">Name</th>
+        <th class="py-3 font-normal text-center ">Email</th>
+        <th class="py-3 font-normal text-center ">Username</th>
+        <th class="py-3 font-normal text-center ">Admin</th>
+        <th class="py-3 font-normal text-center rounded-tr-lg">Status</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="user : ${users}" class="bg-table-gray backdrop-blur-sm border-y-8 border-y-transparent">
+        <td class="py-2 text-center border-btn-gray-border" th:text="${user.name}"></td>
+        <td class="py-2 text-center border-btn-gray-border" th:text="${user.email}"></td>
+        <td class="py-2 text-center border-btn-gray-border" th:text="${user.username}"></td>
+
+        <td class="flex items-center justify-center px-4 py-2 gap-x-3 border-btn-gray-border" th:unless="${user.admin}">
+          <p class="text-center text-green-600 min-w-14">Normal</p>
+          <a th:href="'users/levelUserAlter/' + ${user.username}">
+            <div class="flex items-center justify-center hover:scale-125 transition rounded-full size-9 bg-green-600/30">
+              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="1"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-user"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg>
+            </div>
+          </a>
+        </td>
+        <td class="flex items-center justify-center py-2 text-center gap-x-3 border-btn-gray-border" th:if="${user.admin}">
+          <p class="text-center text-btn-blue min-w-14">Admin</p>
+          <a th:href="'users/levelUserAlter/' + ${user.username}">
+            <div class="flex items-center justify-center rounded-full hover:scale-125 transition size-9 bg-blue-600/30">
+              <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="1"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-user-cog"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" /><path d="M6 21v-2a4 4 0 0 1 4 -4h2.5" /><path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19.001 15.5v1.5" /><path d="M19.001 21v1.5" /><path d="M22.032 17.25l-1.299 .75" /><path d="M17.27 20l-1.3 .75" /><path d="M15.97 17.25l1.3 .75" /><path d="M20.733 20l1.3 .75" /></svg>
+            </div>
+          </a>
+        </td>
+
+        <td class="px-4 py-2 border-btn-gray-border" th:unless="${user.active}">
+          <div class="flex justify-center items-center gap-x-3">
+            <p class="text-center text-yellow-600 min-w-14">Inactive</p>
+            <a th:href="'users/userAlter/' + ${user.username}">
+              <div class="flex items-center justify-center hover:scale-125 transition rounded-full size-9 bg-yellow-600/30">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                     class="icon icon-tabler icons-tabler-outline icon-tabler-link-off">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 15l3 -3m2 -2l1 -1" />
+                  <path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" />
+                  <path d="M3 3l18 18" />
+                  <path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463" />
+                </svg>
+              </div>
+            </a>
+          </div>
+        </td>
+        <td class="py-2 text-center border-btn-gray-border" th:if="${user.active}">
+          <div class="flex justify-center items-center gap-x-3">
+            <p class="text-center text-green-600 min-w-14">Active</p>
+            <a th:href="'users/userAlter/' + ${user.username}">
+              <div class="flex items-center justify-center rounded-full hover:scale-125 transition size-9 bg-green-600/30">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                     class="icon icon-tabler icons-tabler-outline icon-tabler-link">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M9 15l6 -6" />
+                  <path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" />
+                  <path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463" />
+                </svg>
+              </div>
+            </a>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- mobile table -->
+  <section class="w-screen mt-12 mb-12 lg:hidden">
+    <table class="w-full w-screen text-white table-auto mx-14 ">
+      <thead class="bg-btn-gray">
+      <tr>
+        <th class="text-center py-3 font-normal rounded-t-lg">Name</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="user : ${users}" class="bg-table-gray backdrop-blur-sm border-y-8 border-y-transparent">
+        <td class="flex items-center justify-center px-4 py-2 gap-x-3 border-btn-gray-border">
+            <p th:text="${user.name}"></p>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Aside -->
+  <aside id="sidebar" aria-label="Sidebar"
+         class="fixed top-0 left-0 z-40 h-screen px-3 pt-10 pb-4 mt-5 transition-transform -translate-x-full rounded-t-lg lg:block w-72 bg-normal-background-gray lg:bg-background-gray lg:translate-x-0">
+    <a href="/">
+      <h2 class="mb-4 text-4xl font-extrabold text-center text-transparent lg:text-5xl bg-clip-text bg-gradient-to-r from-btn-blue via-btn-pink to-btn-blue">LinkLoom</h2>
+    </a>
+    <div class="flex flex-col justify-between h-full intems center">
+      <ul class="flex flex-col justify-center text-xl font-medium font gap-y-2">
+        <li>
+          <a href="/dashboard" class="flex items-center p-2 text-white transition rounded-lg gap-x-3 hover:bg-btn-blue hover:scale-105 ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="icon icon-tabler icons-tabler-outline icon-tabler-layout-dashboard">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1" />
+              <path d="M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1" />
+              <path d="M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1" />
+              <path d="M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1" />
+            </svg>
+            <p>Dashboard</p>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="flex items-center p-2 text-white transition rounded-lg hover:bg-btn-blue gap-x-3 hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="icon icon-tabler icons-tabler-outline icon-tabler-device-analytics">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M3 4m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z" />
+              <path d="M7 20l10 0" />
+              <path d="M9 16l0 4" />
+              <path d="M15 16l0 4" />
+              <path d="M8 12l3 -3l2 2l3 -3" />
+            </svg>
+            <p>Analytics</p>
+          </a>
+        </li>
+        <li>
+          <a href="#" class="flex items-center p-2 text-white transition rounded-lg hover:bg-btn-blue gap-x-3 hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="icon icon-tabler icons-tabler-outline icon-tabler-qrcode">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+              <path d="M7 17l0 .01" />
+              <path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+              <path d="M7 7l0 .01" />
+              <path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+              <path d="M17 7l0 .01" />
+              <path d="M14 14l3 0" />
+              <path d="M20 14l0 .01" />
+              <path d="M14 14l0 3" />
+              <path d="M14 20l3 0" />
+              <path d="M17 17l3 0" />
+              <path d="M20 17l0 3" />
+            </svg>
+            <p>QR Links</p>
+          </a>
+        </li>
+        <li th:if="${session.user.admin}">
+          <a href="/links" class="flex items-center p-2 text-white transition rounded-lg hover:bg-btn-blue gap-x-3 hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="icon icon-tabler icons-tabler-outline icon-tabler-link">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M9 15l6 -6" />
+              <path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464" />
+              <path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463" />
+            </svg>
+            <p>Links</p>
+          </a>
+        </li>
+        <li th:if="${session.user.admin}">
+          <a href="/users" class="flex items-center p-2 text-white transition rounded-lg gap-x-3 hover:bg-btn-blue hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 class="icon icon-tabler icons-tabler-outline icon-tabler-users">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+              <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+            </svg>
+            <p>Users</p>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- Dropdown menu -->
+  <div id="userDropdown" class="absolute right-[2%] top-[11%] mt-2 z-10 hidden bg-btn-gray divide-y divide-btn-gray-border rounded-lg shadow w-44">
+    <div class="px-4 py-3 text-sm text-white">
+      <p th:text="${session.user.name}"></p>
+      <p id="userEmail" class="font-medium truncate" th:text="${session.user.email}"></p>
+    </div>
+    <ul class="py-2 text-sm text-white" aria-labelledby="avatarButton">
+      <li>
+        <a href="/dashboard" class="block px-4 py-2 hover:bg-btn-blue">Dashboard</a>
+      </li>
+      <li>
+        <a href="/auth/logout" class="block px-4 py-2 hover:bg-btn-blue">Log Out</a>
+      </li>
+    </ul>
+  </div>
+</body>
+
+</html>

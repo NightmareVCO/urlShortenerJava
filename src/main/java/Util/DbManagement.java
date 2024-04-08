@@ -75,7 +75,6 @@ class MongoDbConnection {
     if(mongoClient == null){
       ProcessBuilder processBuilder = new ProcessBuilder();
       String URL_MONGODB = processBuilder.environment().get(StaticFiles.URL_MONGO.getValue());
-      System.out.println(URL_MONGODB);
       dataBaseName = processBuilder.environment().get(StaticFiles.DB_NAME.getValue());
       mongoClient = MongoClients.create(URL_MONGODB);
     }
