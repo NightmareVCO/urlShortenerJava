@@ -1,6 +1,7 @@
 package services;
 
 import Util.DbManagement;
+import dev.morphia.query.filters.Filters;
 import entities.Statistic;
 import entities.User;
 
@@ -32,5 +33,9 @@ public class StatisticService extends DbManagement<Statistic> {
 
     public List<Statistic> findAll() {
       return findAllDb();
+    }
+
+    public Statistic findByIpDirection(String ipDirection) {
+      return findDb().filter(Filters.eq("ipDirection", ipDirection)).first();
     }
 }

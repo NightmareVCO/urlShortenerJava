@@ -37,23 +37,31 @@ public class AuthController extends BaseController {
   }
 
   public void loginGet(Context ctx){
-    ctx.render(LOGIN_RENDER);
+    String encryptUser = ctx.cookie("user");
+    if (encryptUser == null) {
+      ctx.render(LOGIN_RENDER);
+      return;
+    }
+
+    String userEmail = authService.decryptText(encryptUser);
+    User cookieUser = userService.findByEmail(userEmail);
+    ctx.sessionAttribute("user", cookieUser);
+
+    ctx.redirect(INDEX_PATH);
   }
 
   public void loginPost(Context ctx){
+    ctx.req().getSession().invalidate();
     String email = ctx.formParam("email");
     String password = ctx.formParam("password");
-    System.out.println("Email: " + email + " Password: " + password);
     boolean remember = ctx.formParam("remember") != null;
 
     User user = userService.findByEmail(email);
     if(user == null){
-      System.out.println("User not found");
       ctx.redirect(LOGIN_PATH);
       return;
     }
     if(!user.isActive()){
-      System.out.println("User is not active");
       ctx.redirect(LOGIN_PATH);
       return;
     }
@@ -62,7 +70,6 @@ public class AuthController extends BaseController {
     String decryptedPassword = authService.decryptText(userPassword);
     assert password != null;
     if(!password.equals(decryptedPassword)){
-      System.out.println("Password is incorrect");
       ctx.redirect(LOGIN_PATH);
       return;
     }
@@ -104,7 +111,6 @@ public class AuthController extends BaseController {
     ctx.req().getSession().invalidate();
     ctx.removeCookie("user");
     ctx.redirect(INDEX_PATH);
-
   }
 
   @Override
