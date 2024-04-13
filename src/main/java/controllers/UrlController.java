@@ -9,10 +9,7 @@ import services.StatisticService;
 import services.UrlService;
 import services.UserService;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import ua_parser.Parser;
 import ua_parser.Client;
@@ -176,6 +173,23 @@ public String generateRandomString() {
     return randomString.toString();
   }
 
+public void qrCode(Context ctx) {
+  String id = ctx.pathParam("id");
+  if(id == null){
+    System.out.println("id is null");
+    return;
+  }
+  Url url = urlService.findDbByID(id);
+  if(url == null){
+    System.out.println("url is null");
+    return;
+  }
+  if(url.getStatus() == false){
+    System.out.println("url is not active");
+    return;
+  }
+  ctx.render("public/templates/qr.html", Map.of("url", url));
+}
   @Override
   public void applyRoutes() {
     app.routes(() ->{
@@ -193,6 +207,7 @@ public String generateRandomString() {
       app.get("/url/{shortUrl}", this::redirectUrl);
       app.before("/alter/{shortUrl}", this::protectAdmin);
       app.get("/alter/{id}", this::alterUrl);
+      app.get("/qr/{id}", this::qrCode);
     });
   }
 }

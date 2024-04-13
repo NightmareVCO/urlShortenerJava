@@ -172,6 +172,12 @@ td {
     animation: rotate 160s linear infinite;
     opacity: 20%;
 }
+.centrar-qr {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
 
 @keyframes rotate {
     from {
