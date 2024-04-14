@@ -237,21 +237,27 @@ public void qrCode(Context ctx) {
     String token = ctx.header("Authorization");
     System.out.println(token);
     if (token == null) {
-      ctx.status(401).result("Invalid token");
+      Map<String, Object> model = setModel("auth", "not found");
+      ctx.status(401).json(model);
       return;
     }
+
+    System.out.println("hola 1");
 
     try {
       Algorithm algorithm = Algorithm.HMAC256("klasdjal;sd");
       JWT.require(algorithm).build().verify(token);
     } catch (JWTVerificationException exception){
-      ctx.status(401).result("Invalid token");
-      return;
+      Map<String, Object> model = setModel("token", "not valid");
+      ctx.status(401).json(model);
     }
+
+    System.out.println("hola 1");
 
     Gson gson = new Gson();
     Map<String, Object> requestBody = gson.fromJson(ctx.body(), Map.class);
     String longUrl = (String) requestBody.get("url");
+    System.out.println(longUrl);
     String shortUrl = urlService.generateShortUrl(longUrl);
 
     urlService.create(shortUrl, longUrl, new Date(), null, true, 0, null);
