@@ -6,6 +6,10 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import services.AuthService;
 import services.UserService;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+
+import java.util.Date;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
@@ -74,8 +78,20 @@ public class AuthController extends BaseController {
       return;
     }
 
+    // Create JWT
+    Algorithm algorithm = Algorithm.HMAC256("klasdjal;sd");
+    Date issuedAt = new Date();
+    Date expiresAt = new Date(issuedAt.getTime() + 30 * 60 * 1000);
+    String token = JWT.create()
+      .withIssuer("auth0")
+      .withSubject(email)
+      .withIssuedAt(issuedAt)
+      .withExpiresAt(expiresAt)
+      .sign(algorithm);
+
     ctx.sessionAttribute("user", user);
     ctx.sessionAttribute("email", user.getEmail());
+    ctx.cookie("token", token);
     if(remember){
       String encryptUser = authService.encryptText(email);
       ctx.cookie("user", encryptUser, 604800);

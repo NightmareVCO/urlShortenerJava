@@ -75,4 +75,9 @@ public class UrlService extends DbManagement<Url> {
 
     return analytics;
   }
+
+  public String getBase64Image(String longUrl) {
+    return "data:image/png;base64," + Base64.getEncoder().encodeToString(longUrl.getBytes());
+  }
+
 }
