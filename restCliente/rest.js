@@ -4,13 +4,16 @@ Para ejecutar este archivo, es necesario tener instalado Node.js
 Para instalar Node.js, descargar el instalador desde la página oficial:
 https://nodejs.org/es/ y seguir las instrucciones de instalación.
 
+para instalar pnpm globalmente, ejecutar el siguiente comando:
+npm install -g pnpm
+
 Para instalar las dependencias, ejecutar el siguiente comando:
-npm install
+pnpm install
 
 Para ejecutar este archivo, ejecutar el siguiente comando:
 node rest
 o el script que se haya definido en el package.json
-npm run run
+pnpm run run
 */
 
 import axios from 'axios';
