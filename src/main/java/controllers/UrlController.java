@@ -8,6 +8,11 @@ import io.javalin.http.Context;
 import services.StatisticService;
 import services.UrlService;
 import services.UserService;
+import com.google.gson.Gson;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 
 import java.util.*;
 
@@ -21,7 +26,7 @@ public class UrlController extends BaseController {
   private final StatisticService statisticService;
 
   private final String INDEX_PATH = "/";
-  private final String DOMAIN = "http://localhost:3000";
+  private final String DOMAIN = "https://linkloom.vladimircuriel.me";
   private final String INDEX_RENDER = "public/templates/index.html";
   private final String LOGGED_PATH = "/logged";
   private final String LOGGED_RENDER = "public/templates/logged.html";
@@ -190,6 +195,80 @@ public void qrCode(Context ctx) {
   }
   ctx.render("public/templates/qr.html", Map.of("url", url));
 }
+
+
+//  REST ENDPOINTS
+//  Crear un servicio REST y gRPC que realice las siguientes operaciones:
+//    (a) Listado de las URL publicadas por un usuario incluyendo las estadísticas
+//    asociadas.
+//  (b) Creación de registro de URL para un usuario retornando la estructura básica
+//    (url completa, url acortada, fecha creación, objeto de estadística y la imagen actual del sitio (vista previa) en base64.
+//    11. Para el servicio REST es necesario implementar un esquema de seguridad basado en JWT.
+
+  private void getUserLinks(Context ctx) {
+    String token = ctx.header("Authorization");
+    System.out.println(token);
+    if (token == null) {
+      ctx.status(401).result("Invalid token");
+      return;
+    }
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256("klasdjal;sd"); // Reemplaza "secret" con tu clave secreta
+      JWT.require(algorithm).build().verify(token);
+    } catch (JWTVerificationException exception){
+      // Si la verificación falla, puedes manejarlo aquí. Por ejemplo, puedes enviar una respuesta de error y retornar.
+      ctx.status(401).result("Invalid token");
+    }
+
+    User user = userService.findByUsername(ctx.pathParam("username"));
+    if (user == null) {
+      Map<String, Object> model = setModel("user", "not found");
+      ctx.json(model);
+      return;
+    }
+
+    List<Url> allUserUrls = urlService.findByUser(user);
+    Map<String, Object> model = setModel("urls", allUserUrls);
+    ctx.status(200).json(model);
+  }
+
+  private void createNewLink(Context ctx) {
+    String token = ctx.header("Authorization");
+    System.out.println(token);
+    if (token == null) {
+      Map<String, Object> model = setModel("auth", "not found");
+      ctx.status(401).json(model);
+      return;
+    }
+
+    System.out.println("hola 1");
+
+    try {
+      Algorithm algorithm = Algorithm.HMAC256("klasdjal;sd");
+      JWT.require(algorithm).build().verify(token);
+    } catch (JWTVerificationException exception){
+      Map<String, Object> model = setModel("token", "not valid");
+      ctx.status(401).json(model);
+    }
+
+    System.out.println("hola 1");
+
+    Gson gson = new Gson();
+    Map<String, Object> requestBody = gson.fromJson(ctx.body(), Map.class);
+    String longUrl = (String) requestBody.get("url");
+    System.out.println(longUrl);
+    String shortUrl = urlService.generateShortUrl(longUrl);
+
+    urlService.create(shortUrl, longUrl, new Date(), null, true, 0, null);
+    String base64 = urlService.getBase64Image(longUrl);
+
+    Url url = urlService.findByUrl(shortUrl);
+    Map<String, Object> model = setModel("url", url, "base64", base64);
+    ctx.status(201).json(model);
+  }
+
+
   @Override
   public void applyRoutes() {
     app.routes(() ->{
@@ -208,6 +287,8 @@ public void qrCode(Context ctx) {
       app.before("/alter/{shortUrl}", this::protectAdmin);
       app.get("/alter/{id}", this::alterUrl);
       app.get("/qr/{id}", this::qrCode);
+      app.get("/links/{username}", this::getUserLinks);
+      app.post("/createLink", this::createNewLink);
     });
   }
 }
