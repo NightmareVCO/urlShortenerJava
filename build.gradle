@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 group = 'org.example'
@@ -33,4 +34,10 @@ test {
 }
 run {
     standardInput = System.in
+}
+
+shadowJar{
+    archiveBaseName.set("app")
+    archiveClassifier.set('')
+    archiveVersion.set('')
 }
