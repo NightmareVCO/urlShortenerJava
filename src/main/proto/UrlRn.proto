@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+package urlshortener;
+
+message UserRequest{
+  string username = 1;
+}
+message UserResponse {
+  string username = 1;
+}
+message UserListResponse {
+  repeated UserResponse users = 1;
+}
+
+message UserUrlsRequest{
+  string username = 1;
+}
+
+message CreateUrlRequest{
+  string username = 1;
+  string originalUrl = 2;
+  Statistic statistic = 3;
+}
+
+message UrlRequest{
+  string username = 1;
+  string originalUrl = 2;
+
+}
+message UrlR{
+  UrlResponse url = 1;
+}
+message UrlResponse{
+  string url = 1;
+  string originalUrl = 2;
+  string date = 3;
+  StatisticList  statistic= 4;
+}
+
+message UrlListResponse{
+  repeated UrlResponse urls = 1;
+}
+
+//Estadisticas de la url
+message Statistic{
+  string browser = 1;
+  string operatingSystem = 2;
+  string ipDirection = 3;
+}
+
+message StatisticList{
+  repeated Statistic statistic = 1;
+}
+
+service UrlRn{
+
+  rpc createUrl(CreateUrlRequest) returns (UrlResponse);
+
+  rpc listUserUrls(UserUrlsRequest) returns (UrlListResponse);
+}

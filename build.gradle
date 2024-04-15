@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'com.google.protobuf' version '0.9.4' //plugin para incluir la compilación de gRPC
+    id 'idea' //plugins para la integración con el IDEA.
     id 'application'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
@@ -25,9 +27,50 @@ dependencies {
     implementation('dev.morphia.morphia:morphia-core:2.4.11')
     implementation("org.mongodb:mongodb-driver-sync:4.10.2")
     implementation("com.github.ua-parser:uap-java:1.6.1")
+    //Librerías necesarias para para implementar gRPC y Protobuf, ver: https://github.com/grpc/grpc-java
+    runtimeOnly 'io.grpc:grpc-netty-shaded:1.62.2'
+    implementation 'io.grpc:grpc-protobuf:1.62.2'
+    implementation 'io.grpc:grpc-stub:1.62.2'
+    implementation 'io.grpc:grpc-services:1.62.2' // Para habilitar la reflexión del servidor https://github.com/grpc/grpc-java/blob/master/documentation/server-reflection-tutorial.md#enable-server-reflection
+    implementation 'com.google.protobuf:protobuf-java:3.25.3'
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53' // necessary for Java 9+
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.auth0:java-jwt:3.18.2'
 }
+//Tareas para la generación del código.
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.1"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.62.2'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+
+    //generatedFilesBaseDir = "$projectDir/generated"
+}
+
+
+//Tareas para integrar con el
+clean {
+    delete protobuf.generatedFilesBaseDir
+}
+
+idea {
+    module {
+        // proto files and generated Java files are automatically added as
+        // source dirs.
+        // If you have additional sources, add them here:
+        sourceDirs += file("src/generated");
+    }
+}
+
 
 test {
     useJUnitPlatform()
