@@ -26,7 +26,7 @@ public class UrlController extends BaseController {
   private final StatisticService statisticService;
 
   private final String INDEX_PATH = "/";
-  private final String DOMAIN = "http://localhost:3000";
+  private final String DOMAIN = "https://linkloom.vladimircuriel.me";
   private final String INDEX_RENDER = "public/templates/index.html";
   private final String LOGGED_PATH = "/logged";
   private final String LOGGED_RENDER = "public/templates/logged.html";

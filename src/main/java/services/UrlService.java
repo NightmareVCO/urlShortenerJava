@@ -10,7 +10,7 @@ import java.util.*;
 
 public class UrlService extends DbManagement<Url> {
 
-  private final String URL_DOMAIN = "http://localhost:3000/url/";
+  private final String URL_DOMAIN = "https://linkloom.vladimircuriel.me/url/";
 
   public UrlService() {
     super(Url.class);
