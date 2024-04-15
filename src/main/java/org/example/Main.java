@@ -2,6 +2,7 @@ package org.example;
 
 import controllers.AuthController;
 import controllers.UrlController;
+import grpc.UrlServiceGrpc;
 import io.javalin.Javalin;
 import io.javalin.http.staticfiles.Location;
 import io.javalin.plugin.bundled.CorsPluginConfig;
@@ -12,35 +13,51 @@ import services.UrlService;
 import services.UserService;
 import controllers.UserController;
 
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+
+
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
 public class Main {
-    public static void main(String[] args) {
-        Javalin app = Javalin.create(config -> {
-            config.staticFiles.add(staticFileConfig -> {
-                staticFileConfig.hostedPath = "/";
-                staticFileConfig.directory = "/public";
-                staticFileConfig.location = Location.CLASSPATH;
-                staticFileConfig.precompress = false;
-                staticFileConfig.aliasCheck = null;
-            });
-            config.plugins.enableCors(corsContainer -> corsContainer.add(CorsPluginConfig::anyHost));
-        }).start(3000);
+    public static void main(String[] args) throws IOException, InterruptedException {
+        Thread javalinThread = new Thread(() -> {
+            Javalin app = Javalin.create(config -> {
+                config.staticFiles.add(staticFileConfig -> {
+                    staticFileConfig.hostedPath = "/";
+                    staticFileConfig.directory = "/public";
+                    staticFileConfig.location = Location.CLASSPATH;
+                    staticFileConfig.precompress = false;
+                    staticFileConfig.aliasCheck = null;
+                });
+                config.plugins.enableCors(corsContainer -> corsContainer.add(CorsPluginConfig::anyHost));
+            }).start(3000);
 
-        BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
+            BasicTextEncryptor textEncryptor = new BasicTextEncryptor();
 
-        UserService userService = new UserService();
-        AuthService authService = new AuthService(textEncryptor);
-        UrlService urlService = new UrlService();
-        StatisticService statisticService = new StatisticService();
+            UserService userService = new UserService();
+            AuthService authService = new AuthService(textEncryptor);
+            UrlService urlService = new UrlService();
+            StatisticService statisticService = new StatisticService();
 
-        new UserController(app, userService).applyRoutes();
-        new AuthController(app, userService, authService).applyRoutes();
-        new UrlController(app, urlService, userService, statisticService).applyRoutes();
-        //addInitialData(userService, urlService, statisticService, textEncryptor);
 
+            new UserController(app, userService).applyRoutes();
+            new AuthController(app, userService, authService).applyRoutes();
+            new UrlController(app, urlService, userService, statisticService).applyRoutes();
+            //addInitialData(userService, urlService, statisticService, textEncryptor);
+
+        });
+        javalinThread.start();
+
+        Server server = ServerBuilder
+                .forPort(8080)
+                .addService(new UrlServiceGrpc()).build();
+
+        server.start();
+        server.awaitTermination();
     }
 
     public static void addInitialData(UserService userService, UrlService urlService, StatisticService statisticService, BasicTextEncryptor textEncryptor) {
